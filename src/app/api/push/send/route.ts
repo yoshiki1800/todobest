@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: sub.keys },
         payload
-      ).catch(e => {
+      ).catch((e: any) => {
         console.error("Error sending to endpoint:", sub.endpoint, e);
         if (e.statusCode === 410 || e.statusCode === 404) {
           supabase.from('push_subscriptions').delete().eq('id', sub.id).then();
