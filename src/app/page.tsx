@@ -138,12 +138,12 @@ export default function Home() {
     }
     
     if (data && data.length >= 0) {
-      const parentTasks = data.filter(t => !t.parent_id).map(t => ({...t, subtasks: []})) as Task[];
+      const parentTasks = data.filter(t => !t.parent_id).map(t => ({...t, subtasks: []})) as unknown as Task[];
       const subTasks = data.filter(t => t.parent_id);
       
       subTasks.forEach(sub => {
         const parent = parentTasks.find(p => p.id === sub.parent_id);
-        if (parent) parent.subtasks!.push(sub as Task);
+        if (parent) parent.subtasks!.push(sub as unknown as Task);
       });
       
       setTasks(parentTasks);
