@@ -1,11 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Navigation from "@/components/Navigation";
+
+export const viewport: Viewport = {
+  themeColor: "#f97316",
+};
 
 export const metadata: Metadata = {
   title: "ToDoBEST",
   description: "ToDoBEST - Your daily schedule and routine manager",
   manifest: "/manifest.json",
-  themeColor: "#f97316",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -21,7 +25,12 @@ export default function RootLayout({
   return (
     <html lang="ja" className="dark">
       <body>
-        {children}
+        <div className="app-container">
+          <Navigation />
+          <div className="main-content-area">
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );
