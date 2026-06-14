@@ -96,7 +96,7 @@ export default function Calendar() {
                 {row.map(day => {
                   const dayStr = format(day, 'yyyy-MM-dd');
                   const dayTasks = tasksByDate.get(dayStr) || [];
-                  const isCurrentMonth = isSameMonth(day, monthStart);
+                  const isCurrentMonth = isSameMonth(day, currentDate);
                   const isSelected = isSameDay(day, selectedDate);
                   const isToday = isSameDay(day, new Date());
                   
