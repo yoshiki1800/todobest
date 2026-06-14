@@ -1,10 +1,7 @@
 .mobileNav {
   display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
+  flex: 0 0 auto;
+  height: calc(70px + env(safe-area-inset-bottom));
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);

@@ -87,6 +87,7 @@ a {
   width: 100vw;
   overflow: hidden;
   background: var(--bg);
+  flex-direction: row;
 }
 
 .main-content-area {
@@ -104,7 +105,18 @@ a {
     flex-direction: column;
   }
   .main-content-area {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 0;
+  }
+  .mobile-hidden {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only-tabs {
+    display: none !important;
   }
 }
 

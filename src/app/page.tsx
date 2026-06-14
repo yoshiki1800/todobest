@@ -242,22 +242,77 @@ export default function Home() {
     });
   };
 
-  const currentHourTop = currentTime.getHours() >= 6 ? (currentTime.getHours() - 6) * 60 + currentTime.getMinutes() : -100;
+  const [activeTab, setActiveTab] = useState<'tasks' | 'timeline'>('tasks');
+  const [dragSelection, setDragSelection] = useState<{ start: number, end: number } | null>(null);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const hour = Math.floor(y / 60) + 6;
+    setDragSelection({ start: hour, end: hour });
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragSelection) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = Math.max(0, e.clientY - rect.top);
+    const hour = Math.floor(y / 60) + 6;
+    setDragSelection(prev => prev ? { ...prev, end: hour } : null);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragSelection) return;
+    const startHour = Math.min(dragSelection.start, dragSelection.end);
+    let endHour = Math.max(dragSelection.start, dragSelection.end) + 1;
+    if (endHour > 24) endHour = 24;
+    
+    setDragSelection(null);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    
+    // Open modal with pre-filled times
+    setEditingTask(null);
+    setAddingSubtaskTo(null);
+    setDefaultType('event');
+    setIsTaskModalOpen(true);
+    
+    // Pass the selected hours to the modal by temporarily storing them in the component state
+    // We already have defaultStartHour, but we also need defaultEndHour. Let's pass an object instead.
+    setDefaultTimeRange({ start: startHour, end: endHour });
+  };
+  
+  const [defaultTimeRange, setDefaultTimeRange] = useState<{start: number, end: number} | null>(null);
 
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>読み込み中...</div>;
 
   return (
     <>
-      <div style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CheckCircle color="var(--accent-blue)" /> 今日のタスク
           </h2>
-          <button className="btn btn-primary" onClick={() => openAddTaskModal(null, 'task')}><Plus size={18} />単発タスク</button>
+          <button className="btn btn-primary" onClick={() => { setDefaultTimeRange(null); openAddTaskModal(null, 'task'); }}><Plus size={18} />単発追加</button>
         </header>
 
-        <div className={styles.contentWrapper}>
-          <div className={styles.taskSection}>
+        {/* Mobile Tabs */}
+        <div className="mobile-only-tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', background: 'var(--bg-glass)', padding: '0.5rem', borderRadius: 'var(--radius-lg)' }}>
+          <button 
+            style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', background: activeTab === 'tasks' ? 'var(--accent-blue)' : 'transparent', color: activeTab === 'tasks' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            onClick={() => setActiveTab('tasks')}
+          >
+            📋 タスクリスト
+          </button>
+          <button 
+            style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-md)', border: 'none', background: activeTab === 'timeline' ? 'var(--accent-purple)' : 'transparent', color: activeTab === 'timeline' ? 'white' : 'var(--text-secondary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+            onClick={() => setActiveTab('timeline')}
+          >
+            ⏰ タイムライン
+          </button>
+        </div>
+
+        <div className={styles.contentWrapper} style={{ flex: 1, overflow: 'hidden' }}>
+          <div className={`${styles.taskSection} ${activeTab === 'timeline' ? 'mobile-hidden' : ''}`} style={{ paddingBottom: '2rem' }}>
             <h3 className={styles.sectionTitle} style={{ color: 'var(--accent-blue)' }}>⚡ ToDo / 進行中</h3>
             {tasks.filter(t => t.status !== 'done' && !t.routine_id && t.task_type !== 'event').map(task => renderTask(task))}
             {tasks.filter(t => t.status !== 'done' && !t.routine_id && t.task_type !== 'event').length === 0 && (
@@ -274,22 +329,29 @@ export default function Home() {
             {tasks.filter(t => t.status === 'done' && t.task_type !== 'event').map(task => renderTask(task))}
           </div>
 
-          <div className={styles.timelineSection} style={{ overflowY: 'auto', position: 'relative', paddingRight: '1rem' }}>
-            <h3 className={styles.sectionTitle} style={{ position: 'sticky', top: 0, background: 'var(--bg)', zIndex: 20, paddingTop: '1rem', paddingBottom: '1rem' }}>
-              <Clock size={18} /> タイムライン (6:00〜)
-            </h3>
+          <div className={`${styles.timelineSection} ${activeTab === 'tasks' ? 'mobile-hidden' : ''}`} style={{ overflowY: 'auto', position: 'relative', paddingRight: '1rem', paddingBottom: '2rem' }}>
+            <div style={{ position: 'sticky', top: 0, background: 'var(--bg)', zIndex: 20, paddingTop: '0.5rem', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>
+                <Clock size={18} /> タイムライン (6:00〜)
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>※長押し＆なぞって予定追加</p>
+            </div>
             
-            <div style={{ position: 'relative', height: '1140px', marginTop: '1rem' }}>
+            <div 
+              style={{ position: 'relative', height: '1140px', marginTop: '1rem', touchAction: 'none' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={() => setDragSelection(null)}
+            >
               {[...Array(19)].map((_, idx) => {
                 const i = idx + 6;
                 if (i > 24) return null;
                 return (
                   <div 
                     key={`hour-${i}`} 
-                    onClick={() => openAddTaskModal(null, 'event', i === 24 ? 0 : i)}
-                    style={{ position: 'absolute', top: `${idx * 60}px`, width: '100%', height: '60px', borderTop: '1px solid var(--border-glass)', cursor: 'pointer' }}
+                    style={{ position: 'absolute', top: `${idx * 60}px`, width: '100%', height: '60px', borderTop: '1px solid var(--border-glass)' }}
                     className="timeline-grid-cell"
-                    title={i < 24 ? `${i}:00に予定を追加` : undefined}
                   >
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', position: 'absolute', top: '-10px', background: 'var(--bg)', padding: '0 4px', pointerEvents: 'none' }}>
                       {i === 24 ? '00:00' : `${i.toString().padStart(2, '0')}:00`}
@@ -298,6 +360,24 @@ export default function Home() {
                 );
               })}
               
+              {/* Drag Selection Preview */}
+              {dragSelection && (
+                <div style={{ 
+                  position: 'absolute', 
+                  left: '10%', right: '10%', 
+                  top: `${(Math.min(dragSelection.start, dragSelection.end) - 6) * 60}px`, 
+                  height: `${(Math.abs(dragSelection.end - dragSelection.start) + 1) * 60}px`, 
+                  background: 'rgba(168, 85, 247, 0.3)', 
+                  border: '2px dashed var(--accent-purple)',
+                  borderRadius: '8px',
+                  zIndex: 30,
+                  pointerEvents: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold'
+                }}>
+                  {Math.min(dragSelection.start, dragSelection.end)}:00 - {Math.max(dragSelection.start, dragSelection.end) + 1}:00
+                </div>
+              )}
+
               {currentHourTop >= 0 && (
                 <div style={{ position: 'absolute', top: `${currentHourTop}px`, width: '100%', borderTop: '2px solid var(--danger)', zIndex: 15, pointerEvents: 'none' }}>
                   <span style={{ position: 'absolute', left: '-5px', top: '-5px', width: '10px', height: '10px', borderRadius: '50%', background: 'var(--danger)' }}></span>
@@ -316,7 +396,8 @@ export default function Home() {
         task={editingTask} 
         parentId={addingSubtaskTo} 
         defaultType={defaultType} 
-        defaultStartHour={defaultStartHour} 
+        defaultStartHour={defaultTimeRange ? defaultTimeRange.start : defaultStartHour} 
+        defaultEndHour={defaultTimeRange ? defaultTimeRange.end : undefined}
         categories={categories} 
         onSave={() => {}} 
       />

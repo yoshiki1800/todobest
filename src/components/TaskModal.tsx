@@ -11,6 +11,7 @@ type TaskModalProps = {
   parentId?: string | null;
   defaultType?: 'task' | 'event';
   defaultStartHour?: number;
+  defaultEndHour?: number;
   onSave: () => void;
   categories: { id: string; name: string; color: string; parent_id: string | null }[];
 };
@@ -29,7 +30,7 @@ const extractTimeFromISO = (isoString: string | null) => {
   return format(date, 'HH:mm');
 };
 
-export default function TaskModal({ isOpen, onClose, task, parentId, defaultType = 'task', defaultStartHour, onSave, categories }: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, task, parentId, defaultType = 'task', defaultStartHour, defaultEndHour, onSave, categories }: TaskModalProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskType, setNewTaskType] = useState<'task' | 'event'>(defaultType);
   const [newTaskCategory, setNewTaskCategory] = useState("");
@@ -67,14 +68,15 @@ export default function TaskModal({ isOpen, onClose, task, parentId, defaultType
         setNewTaskStatus("todo");
         if (defaultStartHour !== undefined) {
           setPlannedStart(`${defaultStartHour.toString().padStart(2, '0')}:00`);
-          setPlannedEnd(`${(defaultStartHour + 1).toString().padStart(2, '0')}:00`);
+          const endHour = defaultEndHour !== undefined ? defaultEndHour : defaultStartHour + 1;
+          setPlannedEnd(`${endHour.toString().padStart(2, '0')}:00`);
         } else {
           setPlannedStart(""); setPlannedEnd(""); 
         }
         setActualStart(""); setActualEnd("");
       }
     }
-  }, [isOpen, task, defaultType, defaultStartHour, categories]);
+  }, [isOpen, task, defaultType, defaultStartHour, defaultEndHour, categories]);
 
   if (!isOpen) return null;
 

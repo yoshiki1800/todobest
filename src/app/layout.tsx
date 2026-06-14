@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import ClientLayout from "@/components/ClientLayout";
 
 export const viewport: Viewport = {
   themeColor: "#f97316",
@@ -28,7 +29,7 @@ export default function RootLayout({
         <div className="app-container">
           <Navigation />
           <div className="main-content-area">
-            {children}
+            <ClientLayout>{children}</ClientLayout>
           </div>
         </div>
       </body>
