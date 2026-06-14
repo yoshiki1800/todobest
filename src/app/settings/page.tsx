@@ -58,9 +58,20 @@ export default function Settings() {
       }
 
       const registration = await navigator.serviceWorker.ready;
+      if (!registration.pushManager) {
+        alert("お使いの環境（ブラウザやOS）はプッシュ通知の受信機能 (PushManager) に対応していません。\n※iPhoneの場合は、必ず「ホーム画面に追加」をして、追加したアプリのアイコンから開いて設定してください。");
+        setIsSubscribing(false);
+        return;
+      }
       
       const response = await fetch('/api/push/subscribe');
       const { publicKey } = await response.json();
+      
+      if (!publicKey) {
+        alert("サーバーの通知キー (VAPID Key) が設定されていません。管理者に連絡してください。");
+        setIsSubscribing(false);
+        return;
+      }
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -74,9 +85,9 @@ export default function Settings() {
       });
       
       alert("通知の設定が完了しました！\n「テスト通知を送信」ボタンを押して届くか確認してください。");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("通知の設定に失敗しました。");
+      alert("通知の設定に失敗しました: " + (e.message || String(e)));
     }
     setIsSubscribing(false);
   }
