@@ -73,12 +73,29 @@ export default function Settings() {
         body: JSON.stringify(subscription)
       });
       
-      alert("通知の設定が完了しました！");
+      alert("通知の設定が完了しました！\n「テスト通知を送信」ボタンを押して届くか確認してください。");
     } catch (e) {
       console.error(e);
       alert("通知の設定に失敗しました。");
     }
     setIsSubscribing(false);
+  }
+
+  async function sendTestNotification() {
+    try {
+      const res = await fetch('/api/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'ToDoBEST', body: 'テスト通知です！正常に届いています。' })
+      });
+      if (res.ok) {
+        alert("テスト通知を送信しました。");
+      } else {
+        alert("送信に失敗しました。");
+      }
+    } catch (e) {
+      alert("エラーが発生しました。");
+    }
   }
 
   const parentCats = categories.filter(c => !c.parent_id);
@@ -100,13 +117,22 @@ export default function Settings() {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
             タスクの予定時刻に通知を受け取ることができます。スマートフォンで「ホーム画面に追加」してから設定することをおすすめします。
           </p>
-          <button 
-            className="btn btn-primary" 
-            onClick={subscribeToNotifications} 
-            disabled={isSubscribing}
-          >
-            {isSubscribing ? "設定中..." : "通知をオンにする"}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button 
+              className="btn btn-primary" 
+              onClick={subscribeToNotifications} 
+              disabled={isSubscribing}
+            >
+              {isSubscribing ? "設定中..." : "通知をオンにする"}
+            </button>
+            <button 
+              className="btn btn-ghost" 
+              onClick={sendTestNotification} 
+              style={{ border: '1px solid var(--accent-purple)', color: 'var(--accent-purple)' }}
+            >
+              テスト通知を送信
+            </button>
+          </div>
         </section>
 
         <section className="glass-card" style={{ padding: '1.5rem' }}>
