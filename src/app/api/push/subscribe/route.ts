@@ -5,6 +5,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+export async function GET() {
+  return NextResponse.json({ 
+    publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY 
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const subscription = await request.json();
