@@ -30,7 +30,6 @@ function SortableTask({ task, onClick, isOverlay = false }: { task: Task, onClic
   return (
     <div 
       ref={setNodeRef} 
-      style={isOverlay ? overlayStyle : style} 
       onClick={!isDragging ? onClick : undefined}
       className="glass-card"
       style={{ 

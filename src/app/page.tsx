@@ -245,6 +245,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'tasks' | 'timeline'>('tasks');
   const [dragSelection, setDragSelection] = useState<{ start: number, end: number } | null>(null);
 
+  const currentHourTop = currentTime.getHours() >= 6 ? (currentTime.getHours() - 6) * 60 + currentTime.getMinutes() : -100;
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
